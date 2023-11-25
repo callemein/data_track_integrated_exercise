@@ -6,6 +6,43 @@ In short what you will do is:
 2. Clean and transform the input data using pyspark and write the output to S3, Snowflake
 3. Run and schedule the application code using Docker, AWS Batch and Airflow
 
+## Data ER
+
+```mermaid
+erDiagram
+    CATEGORY ||--|{ TIMESERIES : categorised
+    CATEGORY {
+        int CATEGORY_ID
+        string CATEGORY
+    }
+
+    STATION ||--|{ TIMESERIES : streams
+    STATION {
+        int orderNumber
+        string deliveryAddress
+    }
+
+    TIMESERIES {
+        int TIMESERIES_ID
+        int CATEGORY_ID
+        int STATION_ID
+        int PROCEDURE_ID
+        string PROCEDURE
+        string UOM
+        float FIRST_VALUE
+        datetime FIRST_VALUE_TIME
+        float LAST_VALUE
+        datetime LAST_VALUE_TIME
+    }
+
+    TIMESERIES }|--|{ DATAPOINT : contains
+    DATAPOINT {
+        int TIMESERIES_ID
+        timestamp TIME
+        float VALUE
+    }
+```
+
 ## Usage
 
 ### Loading Stations
