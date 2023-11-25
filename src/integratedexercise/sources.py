@@ -50,10 +50,12 @@ def load_timeseries_by_date(date, timeseries_ids):
     # Transform the timeseries_ids to a payload
     payload = {"timespan": f"PT24h/{date}", "timeseries": timeseries_ids}
 
-    resp = api_request(f"timeseries/getData", data = payload, method="post")
+    resp = api_request(f"timeseries/getData", data=payload, method="post")
 
     timeseries = {}
     for timeseries_id in timeseries_ids:
-        timeseries[timeseries_id] = [tvp['value'] for tvp in resp[timeseries_id]['values']]
+        timeseries[timeseries_id] = [
+            tvp["value"] for tvp in resp[timeseries_id]["values"]
+        ]
 
     return timeseries

@@ -16,12 +16,18 @@ import pandas as pd
 from sinks import file_to_s3, dataframe_to_s3
 from sources import load_station_timeseries, load_timeseries_by_date, load_stations
 
-from transforms import replace_ids_with_reference, transform_stations, create_map_timeseries_station
+from transforms import (
+    replace_ids_with_reference,
+    transform_stations,
+    create_map_timeseries_station,
+)
 
 s3_prefix = "timothy-data"
 
+
 def process_raw_data(s3_bucket: str, date: str):
     pass
+
 
 def ingest_raw_data_single(s3_bucket: str, date: str):
     stations = load_stations()
@@ -35,7 +41,13 @@ def ingest_raw_data_single(s3_bucket: str, date: str):
         timeseries_data = load_timeseries_by_date(date, list(timeseries.keys()))
         timeseries_data = replace_ids_with_reference(timeseries, timeseries_data)
 
-        file_to_s3(json.dumps(timeseries_data), s3_bucket, f"{s3_prefix}/{date}", f"{station['id']}.json")
+        file_to_s3(
+            json.dumps(timeseries_data),
+            s3_bucket,
+            f"{s3_prefix}/{date}",
+            f"{station['id']}.json",
+        )
+
 
 def ingest_raw_data_bulk(s3_bucket: str, date: str):
     stations = load_stations()
@@ -48,11 +60,13 @@ def ingest_raw_data_bulk(s3_bucket: str, date: str):
 
         timeseries = load_station_timeseries(station["id"])
         station_timeseries_map[station_ref] = timeseries
-        timeseries_station_map.update(create_map_timeseries_station(station_ref, list(timeseries.keys())))
+        timeseries_station_map.update(
+            create_map_timeseries_station(station_ref, list(timeseries.keys()))
+        )
 
     timeseries_data = load_timeseries_by_date(date, list(timeseries_station_map.keys()))
 
-    station_data = {station_ref : {} for station_ref in stations}
+    station_data = {station_ref: {} for station_ref in stations}
     for id, data in timeseries_data.items():
         station_ref = timeseries_station_map[id]
         category_ref = station_timeseries_map[station_ref][id]
@@ -60,7 +74,13 @@ def ingest_raw_data_bulk(s3_bucket: str, date: str):
 
     for station_ref in stations:
         timeseries_data = station_data[station_ref]
-        file_to_s3(json.dumps(timeseries_data), s3_bucket, f"{s3_prefix}/{date}", f"{station['id']}.json")
+        file_to_s3(
+            json.dumps(timeseries_data),
+            s3_bucket,
+            f"{s3_prefix}/{date}",
+            f"{station['id']}.json",
+        )
+
 
 def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -96,8 +116,6 @@ def main():
         ingest_raw_data_single(args.bucket, args.date)
     else:
         ingest_raw_data_bulk(args.bucket, args.date)
-        
-
 
 
 if __name__ == "__main__":

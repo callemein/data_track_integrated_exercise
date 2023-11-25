@@ -1,11 +1,7 @@
-import json
-
 # AWS related libs
 import boto3
 import awswrangler as wr
 
-
-# AWS Related Libs
 
 def file_to_s3(data, s3_bucket, s3_prefix, filepath="file.json"):
     s3 = boto3.resource("s3")
