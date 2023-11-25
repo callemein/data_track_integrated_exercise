@@ -25,3 +25,11 @@ def transform_stations(stations):
         }
 
     return transformed_stations
+
+
+def create_map_timeseries_station(station_ref, timeseries):
+    return {timeseries_id: station_ref for timeseries_id in timeseries}
+
+
+# def unpack_bulk_data(station_timeseries_map, timeseries_data):
+#     return {timeseries_id: station_ref for timeseries_id in timeseries.keys()}
