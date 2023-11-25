@@ -6,6 +6,28 @@ In short what you will do is:
 2. Clean and transform the input data using pyspark and write the output to S3, Snowflake
 3. Run and schedule the application code using Docker, AWS Batch and Airflow
 
+## Usage
+
+### Loading Stations
+```
+python ingest.py -b data-track-integrated-exercise -t stations -e prod 
+```
+
+### Loading Categories
+```
+python ingest.py -b data-track-integrated-exercise -t categories -e prod 
+```
+
+### Loading Timeseries List
+```
+python ingest.py -b data-track-integrated-exercise -t timeseries -e prod 
+```
+
+### Loading Data Points by Date
+```
+python ingest.py -b data-track-integrated-exercise -d 2018-08-18 -e prod 
+```
+
 ## Getting started
 
 We've set up a Gitpod environment containing all the tools required to complete this exercise (awscli, python, vscode, ...). You can access this environment by clicking the button below:
