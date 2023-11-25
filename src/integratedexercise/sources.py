@@ -7,13 +7,17 @@ import requests
 API_URL = "https://geo.irceline.be/sos/api/v1/"
 
 
-def api_request(path, data=None, method="get"):
+def api_request(path, data=None, query=None, method="get"):
     resp = None
 
+    query_string = ""
+    if query is not None:
+        query_string = "&".join([f"{key}={value}" for key, value in query.items()])
+
     if method == "post":
-        resp = requests.post(f"{API_URL}/{path}", json=data)
+        resp = requests.post(f"{API_URL}/{path}?{query_string}", json=data)
     elif method == "get":
-        resp = requests.get(f"{API_URL}/{path}")
+        resp = requests.get(f"{API_URL}/{path}?{query_string}")
 
     return resp.json()
 
@@ -24,38 +28,20 @@ def load_categories():
 
 
 def load_stations():
-    stations = api_request("stations")
+    stations = api_request("stations", query={"expanded": "true"})
     return stations
 
 
-def load_features():
-    features = api_request("features")
-    return features
+def load_timeseries_list():
+    timeseries_list = api_request(
+        "timeseries", query={"expanded": "true"}, method="get"
+    )
+    return timeseries_list
 
 
-def load_station_timeseries(station_id):
-    resp = api_request(f"stations/{station_id}")
-    raw_station_timeseries = resp["properties"]["timeseries"]
-
-    station_timeseries = {}
-    for timeseries_id in raw_station_timeseries:
-        station_timeseries[timeseries_id] = raw_station_timeseries[timeseries_id][
-            "category"
-        ]["label"]
-
-    return station_timeseries
-
-
-def load_timeseries_by_date(date, timeseries_ids):
+def load_datapoints_by_date(date, timeseries_ids):
     # Transform the timeseries_ids to a payload
     payload = {"timespan": f"PT24h/{date}", "timeseries": timeseries_ids}
 
-    resp = api_request(f"timeseries/getData", data=payload, method="post")
-
-    timeseries = {}
-    for timeseries_id in timeseries_ids:
-        timeseries[timeseries_id] = [
-            tvp["value"] for tvp in resp[timeseries_id]["values"]
-        ]
-
+    timeseries = api_request(f"timeseries/getData", data=payload, method="post")
     return timeseries

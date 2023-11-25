@@ -2,83 +2,90 @@ import sys
 from time import sleep
 
 import argparse
-import requests
 import logging
 
-import boto3
 
-import json
-
-import awswrangler as wr
-import pandas as pd
+from datetime import datetime as dt
 
 # import custom lib functions
-from sinks import file_to_s3, dataframe_to_s3
-from sources import load_station_timeseries, load_timeseries_by_date, load_stations
+from sinks import dataframe_to_s3
+
+from sources import (
+    load_datapoints_by_date,
+    load_stations,
+    load_categories,
+    load_timeseries_list,
+)
 
 from transforms import (
-    replace_ids_with_reference,
-    transform_stations,
-    create_map_timeseries_station,
+    transform_stations_to_table,
+    transform_categories_to_table,
+    transform_timeseries_list_to_table,
+    transform_datapoints_to_table,
 )
 
 s3_prefix = "timothy-data"
+
+s3_stations_table = "stations.csv"
+s3_timeseries_table = "timeseries.csv"
+s3_categories_table = "categories.csv"
+
+s3_datapoints_prefix = "data"
+s3_datapoints_table = "data.csv"
+s3_datapoints_compressed_table = "data.parquet"
 
 
 def process_raw_data(s3_bucket: str, date: str):
     pass
 
 
-def ingest_raw_data_single(s3_bucket: str, date: str):
+def ingest_raw_stations(s3_bucket: str):
     stations = load_stations()
-    stations = transform_stations(stations)
+    stations_df = transform_stations_to_table(stations)
+    dataframe_to_s3(stations_df, s3_bucket, s3_prefix, s3_stations_table)
 
-    for station_ref in stations:
-        station = stations[station_ref]
 
-        timeseries = load_station_timeseries(station["id"])
+def ingest_raw_categories(s3_bucket: str):
+    categories = load_categories()
+    categories_df = transform_categories_to_table(categories)
+    dataframe_to_s3(categories_df, s3_bucket, s3_prefix, s3_categories_table)
 
-        timeseries_data = load_timeseries_by_date(date, list(timeseries.keys()))
-        timeseries_data = replace_ids_with_reference(timeseries, timeseries_data)
 
-        file_to_s3(
-            json.dumps(timeseries_data),
+def ingest_raw_timeseries_list(s3_bucket: str):
+    timeseries_list = load_timeseries_list()
+    timeseries_list_df = transform_timeseries_list_to_table(timeseries_list)
+    dataframe_to_s3(timeseries_list_df, s3_bucket, s3_prefix, s3_timeseries_table)
+
+
+def ingest_raw_datapoints(s3_bucket: str, date: str, compressed=True):
+    timeseries_list = load_timeseries_list()
+    timeseries_list_df = transform_timeseries_list_to_table(timeseries_list)
+
+    date_object = dt.fromisoformat(date)
+    # Filter all the timeseries with data available at the time
+    available_timeseries = (timeseries_list_df["FIRST_VALUE_TIME"] < date_object) & (
+        timeseries_list_df["LAST_VALUE_TIME"] >= date_object
+    )
+
+    # Get a list with all the relevant timeseries id's
+    timeseries_ids = timeseries_list_df[available_timeseries]["TIMESERIES_ID"].tolist()
+
+    datapoints = load_datapoints_by_date(date, timeseries_ids)
+    datapoints_df = transform_datapoints_to_table(datapoints)
+
+    if compressed:
+        dataframe_to_s3(
+            datapoints_df,
             s3_bucket,
-            f"{s3_prefix}/{date}",
-            f"{station['id']}.json",
+            s3_prefix,
+            f"{s3_datapoints_prefix}/{date}/{s3_datapoints_compressed_table}",
         )
-
-
-def ingest_raw_data_bulk(s3_bucket: str, date: str):
-    stations = load_stations()
-    stations = transform_stations(stations)
-
-    station_timeseries_map = {}
-    timeseries_station_map = {}
-    for station_ref in stations:
-        station = stations[station_ref]
-
-        timeseries = load_station_timeseries(station["id"])
-        station_timeseries_map[station_ref] = timeseries
-        timeseries_station_map.update(
-            create_map_timeseries_station(station_ref, list(timeseries.keys()))
-        )
-
-    timeseries_data = load_timeseries_by_date(date, list(timeseries_station_map.keys()))
-
-    station_data = {station_ref: {} for station_ref in stations}
-    for id, data in timeseries_data.items():
-        station_ref = timeseries_station_map[id]
-        category_ref = station_timeseries_map[station_ref][id]
-        station_data[station_ref][category_ref] = data
-
-    for station_ref in stations:
-        timeseries_data = station_data[station_ref]
-        file_to_s3(
-            json.dumps(timeseries_data),
+    else:
+        dataframe_to_s3(
+            datapoints_df,
             s3_bucket,
-            f"{s3_prefix}/{date}",
-            f"{station['id']}.json",
+            s3_prefix,
+            f"{s3_datapoints_prefix}/{date}/{s3_datapoints_table}",
         )
 
 
@@ -86,7 +93,15 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     parser = argparse.ArgumentParser(description="Building greeter")
     parser.add_argument(
-        "-d", "--date", dest="date", help="date in format YYYY-mm-dd", required=True
+        "-d", "--date", dest="date", help="date in format YYYY-mm-dd", required=False
+    )
+
+    parser.add_argument(
+        "-t",
+        "--table",
+        dest="table",
+        help="The table you want to ingest: [categories, stations, data_points]",
+        default="data_points",
     )
 
     parser.add_argument(
@@ -101,21 +116,26 @@ def main():
         required=True,
     )
 
-    parser.add_argument(
-        "-ip",
-        "--ingestion-proces",
-        dest="ingestion_process",
-        help="The ingestion process: [single, bulk]",
-        required=True,
-    )
-
     args = parser.parse_args()
     logging.info(f"Using args: {args}")
 
-    if args.ingestion_process == "single":
-        ingest_raw_data_single(args.bucket, args.date)
+    ingest_table = args.table
+    if ingest_table == "categories":
+        ingest_raw_categories(args.bucket)
+
+    elif ingest_table == "stations":
+        ingest_raw_stations(args.bucket)
+
+    elif ingest_table == "timeseries":
+        ingest_raw_timeseries_list(args.bucket)
+
+    elif ingest_table == "data_points":
+        ingest_raw_datapoints(args.bucket, args.date)
+
     else:
-        ingest_raw_data_bulk(args.bucket, args.date)
+        print(
+            "Please choose correct answer: [categories, stations, timeseries, data_points]"
+        )
 
 
 if __name__ == "__main__":

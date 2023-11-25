@@ -12,6 +12,18 @@ def file_to_s3(data, s3_bucket, s3_prefix, filepath="file.json"):
 
 def dataframe_to_s3(df, s3_bucket, s3_prefix, filepath="file.parquet"):
     # Storing data on Data Lake
-    wr.s3.to_parquet(
-        df=df, path=f"s3://{s3_bucket}/{s3_prefix}/{filepath}", dataset=False
-    )
+
+    if filepath.endswith("parquet"):
+        wr.s3.to_parquet(
+            df=df,
+            path=f"s3://{s3_bucket}/{s3_prefix}/{filepath}",
+            dataset=False,
+            index=False,
+        )
+    else:
+        wr.s3.to_csv(
+            df=df,
+            path=f"s3://{s3_bucket}/{s3_prefix}/{filepath}",
+            dataset=False,
+            index=False,
+        )
