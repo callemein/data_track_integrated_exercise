@@ -138,9 +138,11 @@ def transform_timeseries_list_to_table(timeseries_list):
                 timeseries_item["parameters"]["procedure"]["label"],
                 timeseries_item["uom"],
                 timeseries_item["firstValue"]["value"],
-                dt.fromtimestamp(timeseries_item["firstValue"]["timestamp"] / 1000),
+                timeseries_item["firstValue"]["timestamp"],
+                # dt.fromtimestamp(timeseries_item["firstValue"]["timestamp"] / 1000),
                 timeseries_item["lastValue"]["value"],
-                dt.fromtimestamp(timeseries_item["lastValue"]["timestamp"] / 1000),
+                timeseries_item["lastValue"]["timestamp"],
+                # dt.fromtimestamp(timeseries_item["lastValue"]["timestamp"] / 1000),
             ]
         )
 
@@ -170,7 +172,8 @@ def transform_datapoints_to_table(datapoints):
             data.append(
                 [
                     timeseries_id,
-                    dt.fromtimestamp(data_point["timestamp"] / 1000),
+                    data_point["timestamp"],
+                    # dt.fromtimestamp(data_point["timestamp"] / 1000),
                     data_point["value"],
                 ]
             )

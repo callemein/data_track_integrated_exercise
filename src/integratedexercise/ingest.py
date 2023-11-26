@@ -61,14 +61,16 @@ def ingest_raw_datapoints(s3_bucket: str, date: str, compressed=True):
     timeseries_list = load_timeseries_list()
     timeseries_list_df = transform_timeseries_list_to_table(timeseries_list)
 
-    date_object = dt.fromisoformat(date)
+    date_timestamp = dt.fromisoformat(date).timestamp() * 1000
     # Filter all the timeseries with data available at the time
-    available_timeseries = (timeseries_list_df["FIRST_VALUE_TIME"] < date_object) & (
-        timeseries_list_df["LAST_VALUE_TIME"] >= date_object
+    available_timeseries = (timeseries_list_df["FIRST_VALUE_TIME"] < date_timestamp) & (
+        timeseries_list_df["LAST_VALUE_TIME"] >= date_timestamp
     )
 
     # Get a list with all the relevant timeseries id's
     timeseries_ids = timeseries_list_df[available_timeseries]["TIMESERIES_ID"].tolist()
+
+    print(len(timeseries_ids))
 
     datapoints = load_datapoints_by_date(date, timeseries_ids)
     datapoints_df = transform_datapoints_to_table(datapoints)
