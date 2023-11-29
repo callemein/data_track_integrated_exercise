@@ -2,3 +2,4 @@ requests
 pandas
 awswrangler
 boto3
+pyspark
