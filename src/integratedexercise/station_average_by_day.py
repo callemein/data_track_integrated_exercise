@@ -71,9 +71,11 @@ df_stations = df_stations.drop(
 # Join the timeseries and the data_points
 df = df.join(df_timeseries, ["TIMESERIES_ID"])
 
-df = df.withColumn('DATE', to_date('TIME'))
+df = df.withColumn("DATE", to_date("TIME"))
 
-df = df.groupBy("DATE", "TIMESERIES_ID", "STATION_ID", "CATEGORY_ID").agg(avg("VALUE").alias("AVG_VALUE"))
+df = df.groupBy("DATE", "TIMESERIES_ID", "STATION_ID", "CATEGORY_ID").agg(
+    avg("VALUE").alias("AVG_VALUE")
+)
 df = df.join(df_stations, ["STATION_ID"])
 df = df.join(df_categories, ["CATEGORY_ID"])
 
@@ -81,6 +83,6 @@ df.show(5)
 df.printSchema()
 
 # TODO: How can I partitionBy by date without saving the date along with the timestamp?
-df.write.option("header", True).partitionBy("DATE").mode("overwrite").parquet(s3_table_clean_data_points)
-
-
+df.write.option("header", True).partitionBy("DATE").mode("overwrite").parquet(
+    s3_table_clean_data_points
+)
