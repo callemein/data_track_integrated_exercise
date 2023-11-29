@@ -22,6 +22,10 @@ with dag:
         container_overrides={
             "environment": [
                 {
+                    "name": "APP_TYPE",
+                    "value": 'ingest',
+                },
+                {
                     "name": "APP_TABLE",
                     "value": table,
                 },
@@ -32,3 +36,25 @@ with dag:
             ],
         },
     )
+
+    transform = BatchOperator(
+        task_id="tca_dp_transform",
+        job_name="tca_dp_transform",
+        job_definition="dt_tca_ingest",
+        job_queue="integrated-exercise-job-queue",
+        region_name="eu-west-1",
+        container_overrides={
+            "environment": [
+                {
+                    "name": "APP_TYPE",
+                    "value": 'transform',
+                },
+                {
+                    "name": "APP_DATE",
+                    "value": "{{ds}}",
+                },
+            ],
+        },
+    )
+
+    ingest >> transform
