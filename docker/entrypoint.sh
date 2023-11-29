@@ -6,7 +6,7 @@ case $APP_TYPE in
 
   "ingest")
     echo "Starting 'ingest' script"
-    python3 /app/ingest.py -b $APP_BUCKET -e $APP_ENV -t $APP_TABLE -d $APP_DATE
+    python3 /app/ingest.py -b $APP_BUCKET -t $APP_TABLE -d $APP_DATE
     ;;
 
   "transform")
