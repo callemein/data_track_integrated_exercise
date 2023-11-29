@@ -41,7 +41,7 @@ def load_timeseries_list():
 
 def load_datapoints_by_date(date, timeseries_ids):
     # Transform the timeseries_ids to a payload
-    payload = {"timespan": f"PT24h/{date}", "timeseries": timeseries_ids}
+    payload = {"timespan": f"{date}T00:00:00+02:00/PT24h", "timeseries": timeseries_ids}
 
     timeseries = api_request(f"timeseries/getData", data=payload, method="post")
     return timeseries
