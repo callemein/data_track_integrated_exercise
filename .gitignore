@@ -10,3 +10,8 @@ __pycache__
 *.egg
 *.egg-info
 .*cache*/
+
+.terraform
+.terraform.lock.hcl
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
