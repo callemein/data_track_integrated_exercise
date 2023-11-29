@@ -108,14 +108,6 @@ def main():
         "-b", "--bucket", dest="bucket", help="bucket name", required=True
     )
 
-    parser.add_argument(
-        "-e",
-        "--env",
-        dest="env",
-        help="The environment in which we execute the code",
-        required=True,
-    )
-
     args = parser.parse_args()
     logging.info(f"Using args: {args}")
 
