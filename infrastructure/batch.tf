@@ -19,7 +19,7 @@ resource "aws_batch_job_definition" "dt_bjd" {
       },
       {
         type  = "MEMORY"
-        value = "512"
+        value = "2048"
       }
     ]
 
