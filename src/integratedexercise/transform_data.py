@@ -2,6 +2,7 @@ import sys
 
 import argparse
 import logging
+import boto3
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import date_format, to_date, col, avg, from_utc_timestamp
@@ -9,6 +10,7 @@ from pyspark.sql.functions import date_format, to_date, col, avg, from_utc_times
 s3_prefix = "timothy-data"
 
 timezone = "Europe/Brussels"
+
 
 def transform(bucket: str, date: str):
     spark = (
@@ -21,7 +23,7 @@ def transform(bucket: str, date: str):
             ),
         )
         .config(
-            "fs.s3a.aws.credentials.provider",
+            "spark.hadoop.fs.s3a.aws.credentials.provider",
             "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
         )
         .getOrCreate()
@@ -59,7 +61,7 @@ def transform(bucket: str, date: str):
     df = df.withColumn("DATETIME", date_format("TIME", "yyyy-MM-dd HH:mm"))
     df = df.withColumn("DATE", to_date("TIME"))
 
-    df = df.filter(df["DATE"] == date )
+    df = df.filter(df["DATE"] == date)
 
     # df.sort("TIME", ascending=False).show(5, truncate=False)
 
@@ -91,8 +93,6 @@ def transform(bucket: str, date: str):
     df = df.join(df_stations, ["STATION_ID"])
     df = df.join(df_categories, ["CATEGORY_ID"])
 
-    # df.show(5, truncate=False)
-
     # TODO: How can I partitionBy by date without saving the date along with the timestamp?
     df.write.option("header", True).partitionBy("STATION_ID").mode("overwrite").parquet(
         s3_table_clean_data_points
@@ -113,6 +113,9 @@ def main():
     args = parser.parse_args()
     logging.info(f"Using args: {args}")
 
+    # sts = boto3.client('sts')
+    # resp = sts.get_caller_identity()
+    # logging.info(f"{resp}")
     transform(args.bucket, args.date)
 
 
