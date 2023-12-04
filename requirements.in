@@ -4,4 +4,4 @@ awswrangler
 boto3
 pyspark==3.2.1
 streamlit
-folium
+geopy

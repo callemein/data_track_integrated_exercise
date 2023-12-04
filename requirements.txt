@@ -23,8 +23,6 @@ botocore==1.33.4
     #   awswrangler
     #   boto3
     #   s3transfer
-branca==0.7.0
-    # via folium
 cachetools==5.3.2
     # via streamlit
 certifi==2023.11.17
@@ -33,7 +31,9 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via streamlit
-folium==0.15.0
+geographiclib==2.0
+    # via geopy
+geopy==2.4.1
     # via -r requirements.in
 gitdb==4.0.11
     # via gitpython
@@ -46,8 +46,6 @@ importlib-metadata==6.11.0
 jinja2==3.1.2
     # via
     #   altair
-    #   branca
-    #   folium
     #   pydeck
 jmespath==1.0.1
     # via
@@ -67,7 +65,6 @@ numpy==1.26.2
     # via
     #   altair
     #   awswrangler
-    #   folium
     #   pandas
     #   pyarrow
     #   pydeck
@@ -113,7 +110,6 @@ referencing==0.31.1
 requests==2.31.0
     # via
     #   -r requirements.in
-    #   folium
     #   streamlit
 rich==13.7.0
     # via streamlit

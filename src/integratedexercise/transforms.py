@@ -2,6 +2,9 @@
 import pandas as pd
 from datetime import datetime as dt
 
+from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter
+
 ## Pandas enabled transformers
 
 
@@ -22,17 +25,34 @@ from datetime import datetime as dt
 # 	"type": "Feature"
 # },]
 def transform_stations_to_table(stations):
-    columns = ["STATION_ID", "STATION_NAME", "LONGITUDE", "LATITUDE"]
+    columns = ["STATION_ID", "STATION_NAME", "LONGITUDE", "LATITUDE", "CITY"]
     data = []
+
+    geolocator = Nominatim(user_agent="datatrack-tca-ingest")
+    reverse = RateLimiter(geolocator.reverse, min_delay_seconds=1)
+
     for station in stations:
+        address = (
+            reverse(
+                (
+                    station["geometry"]["coordinates"][1],
+                    station["geometry"]["coordinates"][0],
+                )
+            )
+            .raw["address"]
+        )
+        city = address.get("city", "") or  address.get("town", "")
+
         data.append(
             [
                 station["properties"]["id"],
                 station["properties"]["label"],
                 station["geometry"]["coordinates"][0],
                 station["geometry"]["coordinates"][1],
+                city
             ]
         )
+        # break
 
     return pd.DataFrame(data, columns=columns).convert_dtypes()
 
