@@ -13,4 +13,9 @@ case $APP_TYPE in
     echo "Starting 'transform' script"
     python3 /app/transform_data.py -b $APP_BUCKET -d $APP_DATE
     ;;
+
+  "egress")
+    echo "Starting 'egress' script"
+    python3 /app/egress_snowflake.py -b $APP_BUCKET -d $APP_DATE
+    ;;
 esac
