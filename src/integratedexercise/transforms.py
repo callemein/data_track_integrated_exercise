@@ -41,7 +41,7 @@ def transform_stations_to_table(stations):
             )
             .raw["address"]
         )
-        city = address.get("city", "") or  address.get("town", "")
+        city = address.get("city", "") or  address.get("town", "") or  address.get("village", "")
 
         data.append(
             [
