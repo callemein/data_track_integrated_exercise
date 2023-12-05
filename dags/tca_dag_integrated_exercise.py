@@ -7,7 +7,7 @@ dag = DAG(
     description="Ingest data_points",
     default_args={"owner": "Timothy Callemein"},
     schedule_interval="@daily",
-    start_date=dt(2023, 11, 25),
+    start_date=dt(2023, 1, 1),
 )
 
 table = "data_points"
