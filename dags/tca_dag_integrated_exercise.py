@@ -57,4 +57,24 @@ with dag:
         },
     )
 
-    ingest >> transform
+    egress = BatchOperator(
+        task_id="tca_dp_egress",
+        job_name="tca_dp_egress",
+        job_definition="dt_tca_ingest",
+        job_queue="integrated-exercise-job-queue",
+        region_name="eu-west-1",
+        container_overrides={
+            "environment": [
+                {
+                    "name": "APP_TYPE",
+                    "value": 'egress',
+                },
+                {
+                    "name": "APP_DATE",
+                    "value": "{{ds}}",
+                },
+            ],
+        },
+    )
+
+    ingest >> transform >> egress
